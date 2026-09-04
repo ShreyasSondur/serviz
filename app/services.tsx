@@ -29,10 +29,13 @@ import {
   PhoneReceiverVectorIcon,
   MailEnvelopeVectorIcon,
   WhatsAppIcon,
+  WhatsAppBadgeIcon,
+  PhoneCallBadgeIcon,
   CloseCrossIcon,
 } from '@/components/LandingIcons';
 import { useRouter } from 'expo-router';
 import api from '@/services/api';
+import formatUaePhone from '@/utils/phone';
 import SwipableImageCarousel from '@/components/SwipableImageCarousel';
 import SkeletonCard from '@/components/SkeletonCard';
 
@@ -170,15 +173,17 @@ export function ServicesContent({ onTabChange }: { onTabChange?: (tab: TabType) 
       });
   }, [servicesList, searchQuery, selectedEmirate, selectedArea, selectedSort]);
 
-  const handleCall = (phone: string) => {
-    Linking.openURL(`tel:${phone.replace(/\s+/g, '')}`).catch(() => {
-      Alert.alert('Contact Provider', `Call provider at: ${phone}`);
+  const handleCall = (phone?: string) => {
+    const formatted = formatUaePhone(phone);
+    Linking.openURL(formatted.telUrl).catch(() => {
+      Alert.alert('Contact Provider', `Call provider at: ${formatted.display}`);
     });
   };
 
-  const handleWhatsApp = (phone: string) => {
-    Linking.openURL(`https://wa.me/${phone.replace(/[^0-9]/g, '')}`).catch(() => {
-      Alert.alert('Contact Provider', `WhatsApp ${phone}`);
+  const handleWhatsApp = (phone?: string) => {
+    const formatted = formatUaePhone(phone);
+    Linking.openURL(formatted.waUrl).catch(() => {
+      Alert.alert('Contact Provider', `WhatsApp: ${formatted.display}`);
     });
   };
 
@@ -563,7 +568,7 @@ export function ServicesContent({ onTabChange }: { onTabChange?: (tab: TabType) 
               <View style={{ flex: 1 }}>
                 <Text style={styles.sheetTitle}>Contact Provider</Text>
                 <Text style={styles.sheetSub}>
-                  {contactService?.providerName} ({contactService?.phone})
+                  {contactService?.providerName} ({formatUaePhone(contactService?.phone).display})
                 </Text>
               </View>
               <TouchableOpacity
@@ -589,10 +594,12 @@ export function ServicesContent({ onTabChange }: { onTabChange?: (tab: TabType) 
                   onPress={() => contactService && handleCall(contactService.phone)}
                   activeOpacity={0.8}
                 >
-                  <PhoneReceiverVectorIcon color={colors.primary} size={20} />
+                  <PhoneCallBadgeIcon size={44} />
                   <View style={styles.contactOptionInfo}>
                     <Text style={styles.contactOptionTitle}>Direct Phone Call</Text>
-                    <Text style={styles.contactOptionSub}>{contactService?.phone}</Text>
+                    <Text style={styles.contactOptionSub}>
+                      {formatUaePhone(contactService?.phone).display}
+                    </Text>
                   </View>
                 </TouchableOpacity>
 
@@ -603,10 +610,12 @@ export function ServicesContent({ onTabChange }: { onTabChange?: (tab: TabType) 
                   }
                   activeOpacity={0.8}
                 >
-                  <WhatsAppIcon size={22} />
+                  <WhatsAppBadgeIcon size={44} />
                   <View style={styles.contactOptionInfo}>
                     <Text style={styles.contactOptionTitle}>WhatsApp Chat</Text>
-                    <Text style={styles.contactOptionSub}>Instant message quote & photos</Text>
+                    <Text style={styles.contactOptionSub}>
+                      Instant message quote & photos ({formatUaePhone(contactService?.phone).display})
+                    </Text>
                   </View>
                 </TouchableOpacity>
               </>

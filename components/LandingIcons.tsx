@@ -385,20 +385,90 @@ export const LockShieldIcon = ({ color = colors.primary, size = 18 }: { color?: 
 );
 
 // 27. Official WhatsApp Icon Component
-export const WhatsAppIcon = ({ color = '#25D366', size = 20 }: { color?: string; size?: number }) => (
-  <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+export const WhatsAppIcon = ({ color = '#25D366', size = 22 }: { color?: string; size?: number }) => (
+  <View
+    style={{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      borderBottomLeftRadius: 2,
+      backgroundColor: color,
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}
+  >
+    <PhoneReceiverVectorIcon color="#FFFFFF" size={size * 0.55} />
+  </View>
+);
+
+// 28. Official WhatsApp Badge Icon Component
+export const WhatsAppBadgeIcon = ({ size = 42 }: { size?: number }) => {
+  const iconSize = size * 0.54;
+  return (
     <View
       style={{
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: color,
+        backgroundColor: '#25D366',
         alignItems: 'center',
         justifyContent: 'center',
+        shadowColor: '#25D366',
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.35,
+        shadowRadius: 6,
+        elevation: 4,
       }}
     >
-      <PhoneReceiverVectorIcon color="#FFFFFF" size={size * 0.55} />
+      <View
+        style={{
+          width: iconSize,
+          height: iconSize,
+          borderRadius: iconSize / 2,
+          borderBottomLeftRadius: 2,
+          backgroundColor: '#FFFFFF',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <View
+          style={{
+            width: iconSize * 0.72,
+            height: iconSize * 0.72,
+            borderRadius: (iconSize * 0.72) / 2,
+            borderBottomLeftRadius: 1,
+            backgroundColor: '#25D366',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <PhoneReceiverVectorIcon color="#FFFFFF" size={iconSize * 0.45} />
+        </View>
+      </View>
     </View>
+  );
+};
+
+// 29. Direct Phone Call Badge Icon
+export const PhoneCallBadgeIcon = ({ size = 42, color = colors.primary }: { size?: number; color?: string }) => (
+  <View
+    style={{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: 'rgba(217, 142, 50, 0.16)',
+      borderWidth: 1.5,
+      borderColor: 'rgba(217, 142, 50, 0.4)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: color,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 5,
+      elevation: 4,
+    }}
+  >
+    <PhoneReceiverVectorIcon color={color} size={size * 0.48} />
   </View>
 );
 
