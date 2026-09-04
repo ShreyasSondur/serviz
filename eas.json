@@ -1,0 +1,36 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://backend.servizuae.com/api/v1",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "283863108984-vmlc6g0cfqrhqdvnkjriqtv692jiqd1g.apps.googleusercontent.com",
+        "EXPO_PUBLIC_APP_SECRET": "SERVIZ_APP_PROD_SECRET_KEY_2026"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://backend.servizuae.com/api/v1",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "283863108984-vmlc6g0cfqrhqdvnkjriqtv692jiqd1g.apps.googleusercontent.com",
+        "EXPO_PUBLIC_APP_SECRET": "SERVIZ_APP_PROD_SECRET_KEY_2026"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
