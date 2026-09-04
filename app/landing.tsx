@@ -171,16 +171,6 @@ export default function LandingScreen() {
                 <SafeAreaView style={styles.safeHeader}>
                   <View style={styles.headerRow}>
                     <ServizLogo size="md" />
-                    {isPartner && (
-                      <TouchableOpacity
-                        style={styles.dashboardBtn}
-                        onPress={() => router.push('/dashboard')}
-                        activeOpacity={0.8}
-                      >
-                        <DashboardIcon color="#FFFFFF" size={16} />
-                        <Text style={styles.dashboardBtnText}>Dashboard</Text>
-                      </TouchableOpacity>
-                    )}
                   </View>
                 </SafeAreaView>
 
@@ -260,28 +250,52 @@ export default function LandingScreen() {
                 />
               </View>
 
-              {/* Become a Partner Banner */}
-              <View style={styles.partnerCard}>
-                <View style={styles.partnerLeft}>
-                  <PartnerBadgeIcon />
-                  <View style={styles.partnerTextGroup}>
-                    <Text style={styles.partnerTitle}>Become a partner</Text>
-                    <Text style={styles.partnerSubtext}>
-                      Join thousands of professionals growing with <Text style={styles.goldHighlight}>Serviz</Text>
-                    </Text>
+              {/* Partner Section Card (Dynamic for Partner vs User) */}
+              {isPartner ? (
+                <View style={styles.partnerCard}>
+                  <View style={styles.partnerLeft}>
+                    <DashboardIcon color={colors.primary} size={26} />
+                    <View style={styles.partnerTextGroup}>
+                      <Text style={styles.partnerTitle}>Partner Dashboard</Text>
+                      <Text style={styles.partnerSubtext}>
+                        Manage listings, active requests & earnings on <Text style={styles.goldHighlight}>Serviz</Text>
+                      </Text>
+                    </View>
                   </View>
-                </View>
 
-                <TouchableOpacity
-                  style={styles.joinBtn}
-                  onPress={() => {
-                    router.push('/partner-signup');
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.joinBtnText}>Join now →</Text>
-                </TouchableOpacity>
-              </View>
+                  <TouchableOpacity
+                    style={styles.joinBtn}
+                    onPress={() => {
+                      router.push('/dashboard');
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.joinBtnText}>Dashboard →</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.partnerCard}>
+                  <View style={styles.partnerLeft}>
+                    <PartnerBadgeIcon />
+                    <View style={styles.partnerTextGroup}>
+                      <Text style={styles.partnerTitle}>Become a partner</Text>
+                      <Text style={styles.partnerSubtext}>
+                        Join thousands of professionals growing with <Text style={styles.goldHighlight}>Serviz</Text>
+                      </Text>
+                    </View>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.joinBtn}
+                    onPress={() => {
+                      router.push('/partner-signup');
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.joinBtnText}>Join now →</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
 
               {/* Trust Badges Container */}
               <View style={styles.trustCard}>
