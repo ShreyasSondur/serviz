@@ -6,6 +6,7 @@ import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AppProvider } from '@/store/store';
+import { registerForPushNotificationsAsync } from '@/utils/notifications';
 import colors from '@/constants/colors';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
@@ -13,6 +14,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
+    registerForPushNotificationsAsync().catch(() => {});
   }, []);
 
   return (

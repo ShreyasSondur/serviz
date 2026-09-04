@@ -3,8 +3,10 @@
  */
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, authService } from '@/services/auth';
 import api from '@/services/api';
+import { triggerPartnerVerifiedNotification } from '@/utils/notifications';
 
 interface AppState {
   user: User | null;
@@ -35,6 +37,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const res = await authService.getProfile();
       if (res.data) {
         setUser(res.data);
+
+        // Check if partner profile was approved by Admin and trigger push notification once
+        const p = res.data.partnerProfile;
+        if (p && (p.is_verified === true || p.status === 'VERIFIED')) {
+          const notifiedKey = `partner_approved_notified_${res.data.id}_${p.id || 'default'}`;
+          const alreadyNotified = await AsyncStorage.getItem(notifiedKey);
+          if (!alreadyNotified) {
+            await triggerPartnerVerifiedNotification();
+            await AsyncStorage.setItem(notifiedKey, 'true');
+          }
+        }
       }
     } catch (_) {}
   };
