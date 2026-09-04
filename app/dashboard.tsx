@@ -676,26 +676,6 @@ export function DashboardContent() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Title Header & Stat Cards Area */}
         <View style={styles.headerSection}>
-          {/* Admin Verified Notification Banner */}
-          {(isVerified || partnerStatus === 'VERIFIED') && (
-            <View style={styles.verifiedNotificationBanner}>
-              <View style={styles.verifiedBannerIconCol}>
-                <GreenCheckCircleIcon color="#10B981" size={22} />
-              </View>
-              <View style={styles.verifiedBannerTextCol}>
-                <View style={styles.verifiedTitleRow}>
-                  <Text style={styles.verifiedBannerTitle}>Partner Verification Approved</Text>
-                  <View style={styles.verifiedPill}>
-                    <Text style={styles.verifiedPillText}>VERIFIED</Text>
-                  </View>
-                </View>
-                <Text style={styles.verifiedBannerSubtitle}>
-                  Your partner application has been verified by Serviz Administration. You now have full authorization to list services and deals.
-                </Text>
-              </View>
-            </View>
-          )}
-
           <View style={styles.titleTextGroup}>
             <Text style={styles.pageTitleSerif}>
               My <Text style={styles.pageTitleGold}>Services</Text>
@@ -1476,11 +1456,6 @@ export function DashboardContent() {
         onClose={() => setAlertConfig((prev) => ({ ...prev, visible: false }))}
       />
 
-      {/* PARTNER VERIFIED WELCOME MODAL */}
-      <PartnerVerifiedModal
-        visible={isVerifiedNoticeVisible}
-        onClose={() => setIsVerifiedNoticeVisible(false)}
-      />
     </View>
   );
 }
