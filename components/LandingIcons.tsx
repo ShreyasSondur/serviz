@@ -5,7 +5,6 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import colors from '@/constants/colors';
 
 // 1. Search Icon (Magnifying Glass)
@@ -39,28 +38,70 @@ export const TargetCrosshairIcon = ({ color = '#FFFFFF', size = 18 }: { color?: 
   </View>
 );
 
-// 4. Partner Badge Icon (Gold Badge Circle with Vector Icon)
-export const PartnerBadgeIcon = ({ size = 42, color = colors.primary }: { size?: number; color?: string }) => (
-  <View
-    style={{
-      width: size,
-      height: size,
-      borderRadius: size / 2,
-      backgroundColor: 'rgba(217, 142, 50, 0.14)',
-      borderWidth: 1.5,
-      borderColor: 'rgba(217, 142, 50, 0.35)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.25,
-      shadowRadius: 6,
-      elevation: 4,
-    }}
-  >
-    <Ionicons name="briefcase" size={size * 0.52} color={color} />
-  </View>
-);
+// 4. Partner Badge Icon (Pure Vector Gold Medallion Briefcase)
+export const PartnerBadgeIcon = ({ size = 44, color = colors.primary }: { size?: number; color?: string }) => {
+  const innerW = size * 0.45;
+  const innerH = size * 0.32;
+  const handleW = size * 0.22;
+  const handleH = size * 0.12;
+
+  return (
+    <View
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size / 2,
+        backgroundColor: 'rgba(217, 142, 50, 0.14)',
+        borderWidth: 1.5,
+        borderColor: 'rgba(217, 142, 50, 0.45)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 4,
+      }}
+    >
+      {/* Handle */}
+      <View
+        style={{
+          width: handleW,
+          height: handleH,
+          borderWidth: 1.5,
+          borderColor: color,
+          borderTopLeftRadius: 3,
+          borderTopRightRadius: 3,
+          borderBottomWidth: 0,
+          marginBottom: -1,
+        }}
+      />
+      {/* Body */}
+      <View
+        style={{
+          width: innerW,
+          height: innerH,
+          borderWidth: 1.5,
+          borderColor: color,
+          borderRadius: 4,
+          backgroundColor: 'rgba(217, 142, 50, 0.2)',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {/* Center Clasp Line */}
+        <View
+          style={{
+            width: 4,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: color,
+          }}
+        />
+      </View>
+    </View>
+  );
+};
 
 // 5. Shield Checkmark Icon (Verified Professionals)
 export const ShieldCheckIcon = ({ color = colors.primary, size = 32 }: { color?: string; size?: number }) => (
@@ -248,9 +289,21 @@ export const ShieldInfoVectorIcon = ({ color = colors.primary, size = 20 }: { co
 );
 
 // 18. Dashboard Layout Icon (Sleek vector 4-tile grid)
-export const DashboardIcon = ({ color = colors.primary, size = 18 }: { color?: string; size?: number }) => (
-  <Ionicons name="grid-outline" size={size} color={color} />
-);
+export const DashboardIcon = ({ color = colors.primary, size = 18 }: { color?: string; size?: number }) => {
+  const tileSize = (size - 3) / 2;
+  return (
+    <View style={{ width: size, height: size, justifyContent: 'space-between' }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <View style={{ width: tileSize, height: tileSize, backgroundColor: color, borderRadius: 2 }} />
+        <View style={{ width: tileSize, height: tileSize, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        <View style={{ width: tileSize, height: tileSize, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
+        <View style={{ width: tileSize, height: tileSize, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
+      </View>
+    </View>
+  );
+};
 
 // 19. Briefcase Icon (For Services Posted Stat & All Services)
 export const BriefcaseIcon = ({ color = colors.primary, size = 18 }: { color?: string; size?: number }) => (
