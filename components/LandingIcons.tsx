@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import colors from '@/constants/colors';
 
 // 1. Search Icon (Magnifying Glass)
@@ -38,23 +39,26 @@ export const TargetCrosshairIcon = ({ color = '#FFFFFF', size = 18 }: { color?: 
   </View>
 );
 
-// 4. Partner Badge Icon (Gold Circle with 3 White People Outlines)
-export const PartnerBadgeIcon = () => (
-  <View style={styles.partnerCircle}>
-    <View style={styles.peopleGroup}>
-      {/* 3 People Circles Top */}
-      <View style={styles.peopleHeadsRow}>
-        <View style={styles.personHeadSmall} />
-        <View style={styles.personHeadMain} />
-        <View style={styles.personHeadSmall} />
-      </View>
-      {/* 3 People Bodies Bottom */}
-      <View style={styles.peopleBodiesRow}>
-        <View style={styles.personBodySide} />
-        <View style={styles.personBodyCenter} />
-        <View style={styles.personBodySide} />
-      </View>
-    </View>
+// 4. Partner Badge Icon (Gold Badge Circle with Vector Icon)
+export const PartnerBadgeIcon = ({ size = 42, color = colors.primary }: { size?: number; color?: string }) => (
+  <View
+    style={{
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: 'rgba(217, 142, 50, 0.14)',
+      borderWidth: 1.5,
+      borderColor: 'rgba(217, 142, 50, 0.35)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: colors.primary,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 6,
+      elevation: 4,
+    }}
+  >
+    <Ionicons name="briefcase" size={size * 0.52} color={color} />
   </View>
 );
 
@@ -243,22 +247,10 @@ export const ShieldInfoVectorIcon = ({ color = colors.primary, size = 20 }: { co
   </View>
 );
 
-// 18. Dashboard Layout Icon (Sleek 4-tile dashboard layout with gold accent tile)
-export const DashboardIcon = ({ color = colors.primary, size = 16 }: { color?: string; size?: number }) => {
-  const tileSize = (size - 3) / 2;
-  return (
-    <View style={{ width: size, height: size, justifyContent: 'space-between' }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <View style={{ width: tileSize, height: tileSize, backgroundColor: color, borderRadius: 2 }} />
-        <View style={{ width: tileSize, height: tileSize, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
-      </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-        <View style={{ width: tileSize, height: tileSize, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
-        <View style={{ width: tileSize, height: tileSize, borderWidth: 1.5, borderColor: color, borderRadius: 2 }} />
-      </View>
-    </View>
-  );
-};
+// 18. Dashboard Layout Icon (Sleek vector 4-tile grid)
+export const DashboardIcon = ({ color = colors.primary, size = 18 }: { color?: string; size?: number }) => (
+  <Ionicons name="grid-outline" size={size} color={color} />
+);
 
 // 19. Briefcase Icon (For Services Posted Stat & All Services)
 export const BriefcaseIcon = ({ color = colors.primary, size = 18 }: { color?: string; size?: number }) => (

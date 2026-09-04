@@ -254,7 +254,7 @@ export default function LandingScreen() {
               {isPartner ? (
                 <View style={styles.partnerCard}>
                   <View style={styles.partnerLeft}>
-                    <DashboardIcon color={colors.primary} size={26} />
+                    <PartnerBadgeIcon size={44} />
                     <View style={styles.partnerTextGroup}>
                       <Text style={styles.partnerTitle}>Partner Dashboard</Text>
                       <Text style={styles.partnerSubtext}>
@@ -276,7 +276,7 @@ export default function LandingScreen() {
               ) : (
                 <View style={styles.partnerCard}>
                   <View style={styles.partnerLeft}>
-                    <PartnerBadgeIcon />
+                    <PartnerBadgeIcon size={44} />
                     <View style={styles.partnerTextGroup}>
                       <Text style={styles.partnerTitle}>Become a partner</Text>
                       <Text style={styles.partnerSubtext}>
