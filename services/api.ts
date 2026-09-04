@@ -30,21 +30,29 @@ const getFallbackUrls = (): string[] => {
     urls.push(envUrl);
   }
 
-  // 2. Local Metro / Expo dev machine IP for local development fallback
-  const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
-  if (hostUri) {
-    const ip = hostUri.split(':')[0];
-    if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
-      urls.push(`http://${ip}:8000/api/v1`);
+  // Always include the official production API endpoint as primary candidate
+  const defaultProdUrl = 'https://backend.servizuae.com/api/v1';
+  if (!urls.includes(defaultProdUrl)) {
+    urls.push(defaultProdUrl);
+  }
+
+  // 2. Local Metro / Expo dev machine IP for local development fallback (only in DEV mode)
+  if (__DEV__) {
+    const hostUri = Constants.expoConfig?.hostUri || (Constants as any).manifest?.debuggerHost;
+    if (hostUri) {
+      const ip = hostUri.split(':')[0];
+      if (ip && ip !== 'localhost' && ip !== '127.0.0.1') {
+        urls.push(`http://${ip}:8000/api/v1`);
+      }
     }
-  }
 
-  if (Platform.OS === 'android') {
-    urls.push('http://10.0.2.2:8000/api/v1');
-  }
+    if (Platform.OS === 'android') {
+      urls.push('http://10.0.2.2:8000/api/v1');
+    }
 
-  urls.push('http://localhost:8000/api/v1');
-  urls.push('http://127.0.0.1:8000/api/v1');
+    urls.push('http://localhost:8000/api/v1');
+    urls.push('http://127.0.0.1:8000/api/v1');
+  }
 
   return Array.from(new Set(urls));
 };
@@ -70,10 +78,14 @@ class ApiService {
 
   private async saveWorkingUrl(url: string) {
     this.baseUrl = url;
-    try {
-      await storage.setItem('serviz_working_base_url', url);
-    } catch (e) {
-      // Ignored
+    // Do not persist local/loopback URLs in production builds
+    const isLocal = url.includes('localhost') || url.includes('10.0.2.2') || url.includes('127.0.0.1');
+    if (!isLocal || __DEV__) {
+      try {
+        await storage.setItem('serviz_working_base_url', url);
+      } catch (e) {
+        // Ignored
+      }
     }
   }
 
@@ -94,7 +106,12 @@ class ApiService {
     try {
       const savedUrl = await storage.getItem('serviz_working_base_url');
       if (savedUrl && savedUrl.trim() !== '') {
-        this.baseUrl = savedUrl.trim();
+        const trimmed = savedUrl.trim();
+        const isLocal = trimmed.includes('localhost') || trimmed.includes('10.0.2.2') || trimmed.includes('127.0.0.1');
+        // Only load saved URL if not an emulator loopback in production
+        if (!isLocal || __DEV__) {
+          this.baseUrl = trimmed;
+        }
       }
       const saved = await storage.getItem('serviz_auth_token');
       if (saved) {
@@ -121,8 +138,8 @@ class ApiService {
     return headers;
   }
 
-  // Fast fetch wrapper with AbortController timeout to prevent long hanging socket connections
-  private async fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 3500): Promise<Response> {
+  // Fast fetch wrapper with AbortController timeout to prevent hanging socket connections
+  private async fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number = 15000): Promise<Response> {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -136,34 +153,45 @@ class ApiService {
     }
   }
 
-  // Attempt request with auto-retry & fast 3.5s connection timeout across fallback candidate URLs
+  // Attempt request with auto-retry & realistic 15s timeout across candidate URLs
   private async executeFetch(
     endpoint: string,
     options: RequestInit
   ): Promise<{ response: Response | null; data: any; error: string | null }> {
-    // 1. Try current baseUrl with fast timeout
-    try {
-      const res = await this.fetchWithTimeout(`${this.baseUrl}${endpoint}`, options, 3500);
-      const data = await res.json().catch(() => null);
-      this.saveWorkingUrl(this.baseUrl);
-      return { response: res, data, error: null };
-    } catch (err: any) {
-      console.log(`[API] Unreachable ${this.baseUrl}${endpoint}, probing candidates...`);
+    const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    let lastError: any = null;
+
+    // 1. Try current baseUrl with 15s timeout and 1 auto-retry on connection drop
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await this.fetchWithTimeout(`${this.baseUrl}${formattedEndpoint}`, options, 15000);
+        const data = await res.json().catch(() => null);
+        this.saveWorkingUrl(this.baseUrl);
+        return { response: res, data, error: null };
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`[API] Attempt ${attempt + 1} to ${this.baseUrl}${formattedEndpoint} failed:`, err?.message || err);
+        if (attempt === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 600));
+        }
+      }
     }
 
-    // 2. Try alternate candidate fallback URLs with 3s timeout
+    // 2. Try alternate candidate fallback URLs
     for (const url of CANDIDATE_URLS) {
       if (url === this.baseUrl) continue;
       try {
-        const res = await this.fetchWithTimeout(`${url}${endpoint}`, options, 3000);
+        const res = await this.fetchWithTimeout(`${url}${formattedEndpoint}`, options, 10000);
         const data = await res.json().catch(() => null);
-        console.log(`[API] Connected successfully to working URL: ${url}`);
+        console.log(`[API] Connected successfully to fallback URL: ${url}`);
         this.saveWorkingUrl(url);
         return { response: res, data, error: null };
-      } catch (err) {
-        // Continue to next candidate
+      } catch (err: any) {
+        lastError = err;
       }
     }
+
+    console.error(`[API] All connection attempts failed for ${formattedEndpoint}:`, lastError?.message || lastError);
 
     return {
       response: null,
