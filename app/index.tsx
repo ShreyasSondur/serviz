@@ -27,15 +27,24 @@ import api from '@/services/api';
 
 import LoadingModal from '@/components/LoadingModal';
 
+import { ActivityIndicator } from 'react-native';
+
 WebBrowser.maybeCompleteAuthSession();
 
 export default function IndexScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ token?: string }>();
-  const { login, refreshUser, isLoading } = useAuth();
+  const { user, isAuthenticated, isBootstrapping, login, refreshUser, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  // Auto-redirect if user session is active / restored
+  useEffect(() => {
+    if (!isBootstrapping && (isAuthenticated || user || api.getToken())) {
+      router.replace('/landing');
+    }
+  }, [isBootstrapping, isAuthenticated, user]);
 
   // Extract and apply authentication token from URL
   const processGoogleToken = async (rawUrl?: string | null) => {
@@ -99,6 +108,15 @@ export default function IndexScreen() {
       setError(res.error || 'Invalid email or password');
     }
   };
+
+  if (isBootstrapping || (isAuthenticated && api.getToken())) {
+    return (
+      <View style={styles.bootSplashContainer}>
+        <ServizLogo size="lg" />
+        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 28 }} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -287,5 +305,11 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontWeight: '700',
     fontSize: 14,
+  },
+  bootSplashContainer: {
+    flex: 1,
+    backgroundColor: '#0E0E12',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -13,6 +13,7 @@ interface AppState {
   isAuthenticated: boolean;
   isPartner: boolean;
   isLoading: boolean;
+  isBootstrapping: boolean;
   themeMode: 'light' | 'dark';
 }
 
@@ -29,27 +30,53 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isBootstrapping, setIsBootstrapping] = useState<boolean>(true);
   const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light');
 
   const refreshUser = async () => {
     try {
-      await api.loadSavedToken();
-      const res = await authService.getProfile();
-      if (res.data) {
-        setUser(res.data);
-
-        // Check if partner profile was approved by Admin and trigger push notification once
-        const p = res.data.partnerProfile;
-        if (p && (p.is_verified === true || p.status === 'VERIFIED')) {
-          const notifiedKey = `partner_approved_notified_${res.data.id}_${p.id || 'default'}`;
-          const alreadyNotified = await AsyncStorage.getItem(notifiedKey);
-          if (!alreadyNotified) {
-            await triggerPartnerVerifiedNotification();
-            await AsyncStorage.setItem(notifiedKey, 'true');
+      // 1. Instantly restore cached user profile from AsyncStorage if available
+      const cachedUserStr = await AsyncStorage.getItem('serviz_user_session');
+      if (cachedUserStr) {
+        try {
+          const cachedUser = JSON.parse(cachedUserStr);
+          if (cachedUser && cachedUser.id) {
+            setUser(cachedUser);
           }
+        } catch (_) {}
+      }
+
+      // 2. Load saved token and verify profile with backend
+      await api.loadSavedToken();
+      const token = api.getToken();
+
+      if (token) {
+        const res = await authService.getProfile();
+        if (res.data) {
+          setUser(res.data);
+          await AsyncStorage.setItem('serviz_user_session', JSON.stringify(res.data));
+
+          // Check if partner profile was approved by Admin and trigger push notification once
+          const p = res.data.partnerProfile;
+          if (p && (p.is_verified === true || p.status === 'VERIFIED')) {
+            const notifiedKey = `partner_approved_notified_${res.data.id}_${p.id || 'default'}`;
+            const alreadyNotified = await AsyncStorage.getItem(notifiedKey);
+            if (!alreadyNotified) {
+              await triggerPartnerVerifiedNotification();
+              await AsyncStorage.setItem(notifiedKey, 'true');
+            }
+          }
+        } else if (res.status === 401) {
+          // Token is invalid/expired
+          setUser(null);
+          await AsyncStorage.removeItem('serviz_user_session');
+          await api.setToken(null);
         }
       }
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      setIsBootstrapping(false);
+    }
   };
 
   React.useEffect(() => {
@@ -62,6 +89,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const res = await authService.login(email, password);
       if (res.data) {
         setUser(res.data.user);
+        await AsyncStorage.setItem('serviz_user_session', JSON.stringify(res.data.user));
         await refreshUser();
         return { success: true };
       }
@@ -75,6 +103,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await authService.logout();
+      await AsyncStorage.removeItem('serviz_user_session');
+      await api.setToken(null);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -95,6 +125,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     isPartner,
     isLoading,
+    isBootstrapping,
     themeMode,
     login,
     logout,
