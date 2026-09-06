@@ -64,8 +64,7 @@ export default function LandingScreen() {
   const { isPartner } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Catalog API States (ONLY real backend catalog data)
-  const [catalogLoading, setCatalogLoading] = useState(true);
+  // Catalog API States (loaded smoothly in background without blocking UI)
   const [emiratesList, setEmiratesList] = useState<{ id: number; name: string }[]>(DEFAULT_EMIRATES);
   const [areasList, setAreasList] = useState<{ id: number; name: string }[]>(DEFAULT_AREAS);
   const [servicesList, setServicesList] = useState<{ id: number; name: string }[]>([]);
@@ -79,16 +78,9 @@ export default function LandingScreen() {
   const [serviceSearchFilter, setServiceSearchFilter] = useState('');
   const [alreadyPartnerModal, setAlreadyPartnerModal] = useState(false);
 
-  // Fetch real Emirates, Areas & Admin Services from backend catalog before showing main screen
+  // Fetch real Emirates, Areas & Admin Services from backend catalog in background
   useEffect(() => {
     let isMounted = true;
-
-    // Safety timeout: Never stay stuck on splash screen for more than 2 seconds
-    const safetyTimer = setTimeout(() => {
-      if (isMounted && catalogLoading) {
-        setCatalogLoading(false);
-      }
-    }, 2000);
 
     async function loadCatalog() {
       try {
@@ -117,10 +109,6 @@ export default function LandingScreen() {
         }
       } catch (err) {
         console.log('Catalog fetch error:', err);
-      } finally {
-        if (isMounted) {
-          setCatalogLoading(false);
-        }
       }
     }
 
@@ -128,7 +116,6 @@ export default function LandingScreen() {
 
     return () => {
       isMounted = false;
-      clearTimeout(safetyTimer);
     };
   }, []);
 
@@ -162,17 +149,6 @@ export default function LandingScreen() {
   const handleSearchClick = () => {
     setActiveTab('services');
   };
-
-  if (catalogLoading) {
-    return (
-      <View style={styles.splashContainer}>
-        <ServizLogo size="lg" />
-        <Text style={styles.splashTagline}>Dubai's Premier Service Platform</Text>
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 28 }} />
-        <Text style={styles.splashStatus}>Loading catalog locations...</Text>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -464,24 +440,6 @@ export default function LandingScreen() {
 }
 
 const styles = StyleSheet.create({
-  splashContainer: {
-    flex: 1,
-    backgroundColor: '#0F0F10',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  splashTagline: {
-    fontSize: 14,
-    color: '#8E8E98',
-    marginTop: 12,
-    letterSpacing: 0.4,
-  },
-  splashStatus: {
-    fontSize: 12,
-    color: '#666672',
-    marginTop: 12,
-  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

@@ -45,10 +45,6 @@ export function ProfileContent() {
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
-    refreshUser();
-  }, []);
-
-  useEffect(() => {
     if (user?.phone || user?.phone_number) {
       const currentPhone = user.phone || user.phone_number || '';
       setPhone(currentPhone);

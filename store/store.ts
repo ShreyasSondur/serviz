@@ -28,6 +28,8 @@ interface AppContextType extends AppState {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const APP_INSTALL_VERSION_KEY = 'serviz_app_install_v4';
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -36,6 +38,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     try {
+      // Ensure fresh install starts logged out (clears any Google Drive / OS backup auto-restored credentials)
+      const installMarker = await AsyncStorage.getItem(APP_INSTALL_VERSION_KEY);
+      if (!installMarker) {
+        await AsyncStorage.multiRemove(['serviz_user_session', 'serviz_auth_token']);
+        await storage.removeItem('serviz_auth_token');
+        await storage.removeItem('serviz_user_session');
+        await api.setToken(null);
+        setUser(null);
+        await AsyncStorage.setItem(APP_INSTALL_VERSION_KEY, 'true');
+        return;
+      }
+
       // 1. Instantly restore cached user profile from AsyncStorage if available
       const cachedUserStr = await AsyncStorage.getItem('serviz_user_session');
       if (cachedUserStr) {

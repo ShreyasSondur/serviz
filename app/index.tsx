@@ -41,9 +41,17 @@ export default function IndexScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // Auto-redirect if user session is active / restored
+  const hasRedirectedRef = React.useRef(false);
+
+  // Auto-redirect once if user session is active / restored on initial bootstrap
   useEffect(() => {
-    if (!isBootstrapping && isAuthenticated && user && !!api.getToken()) {
+    if (!isAuthenticated) {
+      hasRedirectedRef.current = false;
+      return;
+    }
+
+    if (!isBootstrapping && isAuthenticated && user && !!api.getToken() && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true;
       router.replace('/landing');
     }
   }, [isBootstrapping, isAuthenticated, user]);
