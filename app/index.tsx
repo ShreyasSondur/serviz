@@ -46,6 +46,12 @@ export default function IndexScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState({
+    title: 'Logging In...',
+    subtitle: 'Verifying credentials with Serviz...',
+  });
+
   // Auto-redirect strictly once per session upon bootstrap
   useEffect(() => {
     if (!isAuthenticated) {
@@ -66,12 +72,24 @@ export default function IndexScreen() {
     if (match && match[1]) {
       const token = match[1];
       hasProcessedInitialUrl = true;
-      await api.setToken(token);
-      await refreshUser();
-      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history?.replaceState) {
-        window.history.replaceState({}, document.title, window.location.pathname);
+      setLoadingText({
+        title: 'Authenticating...',
+        subtitle: 'Finalizing your secure session with Serviz...',
+      });
+      setGoogleLoading(true);
+
+      try {
+        await api.setToken(token);
+        await refreshUser();
+        if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history?.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        router.replace('/landing');
+      } catch (err) {
+        console.log('Error processing Google token:', err);
+        setGoogleLoading(false);
+        setError('Failed to complete Google sign-in. Please try again.');
       }
-      router.replace('/landing');
     }
   };
 
@@ -93,6 +111,13 @@ export default function IndexScreen() {
   }, [params.token]);
 
   const handleGoogleLogin = async () => {
+    setError(null);
+    setLoadingText({
+      title: 'Connecting to Google...',
+      subtitle: 'Opening secure authentication window...',
+    });
+    setGoogleLoading(true);
+
     const redirectUrl = Linking.createURL('/');
     const googleUrl = `${api.getBaseUrl()}/auth/google/login?redirect_url=${encodeURIComponent(redirectUrl)}&prompt=select_account`;
 
@@ -105,13 +130,21 @@ export default function IndexScreen() {
       const result = await WebBrowser.openAuthSessionAsync(
         googleUrl,
         redirectUrl,
-        { preferEphemeralSession: true }
+        { preferEphemeralSession: Platform.OS === 'ios' }
       );
       if (result.type === 'success' && result.url) {
+        setLoadingText({
+          title: 'Authenticating...',
+          subtitle: 'Finalizing your secure session with Serviz...',
+        });
         await processGoogleToken(result.url);
+      } else {
+        // User cancelled or closed browser
+        setGoogleLoading(false);
       }
     } catch (err) {
       console.log('WebBrowser Google Auth error:', err);
+      setGoogleLoading(false);
       Linking.openURL(googleUrl);
     }
   };
@@ -123,6 +156,11 @@ export default function IndexScreen() {
       setError('Please enter your email and password');
       return;
     }
+
+    setLoadingText({
+      title: 'Logging In...',
+      subtitle: 'Verifying credentials with Serviz...',
+    });
 
     const res = await login(cleanEmail, password);
     if (res.success) {
@@ -144,9 +182,9 @@ export default function IndexScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <LoadingModal
-        visible={isLoading}
-        title="Logging In..."
-        subtitle="Verifying credentials with Serviz..."
+        visible={googleLoading || isLoading}
+        title={loadingText.title}
+        subtitle={loadingText.subtitle}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

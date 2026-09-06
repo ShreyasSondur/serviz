@@ -37,6 +37,10 @@ export default function SignUpScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingText, setLoadingText] = useState({
+    title: 'Creating Account...',
+    subtitle: 'Setting up your Serviz account...',
+  });
 
   const handleSignUp = async () => {
     setError(null);
@@ -57,6 +61,10 @@ export default function SignUpScreen() {
       return;
     }
 
+    setLoadingText({
+      title: 'Creating Account...',
+      subtitle: 'Setting up your Serviz account...',
+    });
     setLoading(true);
 
     try {
@@ -87,12 +95,56 @@ export default function SignUpScreen() {
     }
   };
 
+  const handleGoogleSignup = async () => {
+    setError(null);
+    setLoadingText({
+      title: 'Connecting to Google...',
+      subtitle: 'Opening secure authentication window...',
+    });
+    setLoading(true);
+
+    const redirectUrl = Linking.createURL('/');
+    const googleUrl = `${api.getBaseUrl()}/auth/google/login?redirect_url=${encodeURIComponent(redirectUrl)}&prompt=select_account`;
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      window.location.href = googleUrl;
+      return;
+    }
+
+    try {
+      const result = await WebBrowser.openAuthSessionAsync(
+        googleUrl,
+        redirectUrl,
+        { preferEphemeralSession: Platform.OS === 'ios' }
+      );
+
+      if (result.type === 'success' && result.url) {
+        const match = result.url.match(/[?&]token=([^&]+)/);
+        if (match && match[1]) {
+          setLoadingText({
+            title: 'Authenticating...',
+            subtitle: 'Finalizing your secure session with Serviz...',
+          });
+          await api.setToken(match[1]);
+          await refreshUser();
+          router.replace('/landing');
+          return;
+        }
+      }
+      setLoading(false);
+    } catch (err) {
+      console.log('Google Auth error in signup:', err);
+      setLoading(false);
+      Linking.openURL(googleUrl);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <LoadingModal
         visible={loading}
-        title="Creating Account..."
-        subtitle="Setting up your Serviz account..."
+        title={loadingText.title}
+        subtitle={loadingText.subtitle}
       />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -161,32 +213,7 @@ export default function SignUpScreen() {
                 title="CONTINUE WITH GOOGLE"
                 variant="google"
                 icon={<GoogleIcon />}
-                onPress={async () => {
-                  const redirectUrl = Linking.createURL('/');
-                  const googleUrl = `${api.getBaseUrl()}/auth/google/login?redirect_url=${encodeURIComponent(redirectUrl)}&prompt=select_account`;
-                  if (Platform.OS === 'web' && typeof window !== 'undefined') {
-                    window.location.href = googleUrl;
-                    return;
-                  }
-                  try {
-                    const result = await WebBrowser.openAuthSessionAsync(
-                      googleUrl,
-                      redirectUrl,
-                      { preferEphemeralSession: true }
-                    );
-                    if (result.type === 'success' && result.url) {
-                      const match = result.url.match(/[?&]token=([^&]+)/);
-                      if (match && match[1]) {
-                        await api.setToken(match[1]);
-                        await refreshUser();
-                        router.replace('/landing');
-                        return;
-                      }
-                    }
-                  } catch (err) {
-                    Linking.openURL(googleUrl);
-                  }
-                }}
+                onPress={handleGoogleSignup}
                 style={styles.googleBtn}
               />
 

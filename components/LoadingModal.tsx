@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import colors from '@/constants/colors';
+import ServizLogo from '@/components/Logo';
 
 interface LoadingModalProps {
   visible: boolean;
@@ -28,6 +29,10 @@ export const LoadingModal: React.FC<LoadingModalProps> = ({
     >
       <View style={styles.overlay}>
         <View style={styles.card}>
+          <View style={styles.logoBadge}>
+            <ServizLogo size="sm" />
+          </View>
+
           <View style={styles.spinnerContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
@@ -43,7 +48,7 @@ export const LoadingModal: React.FC<LoadingModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(10, 10, 14, 0.85)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
@@ -51,41 +56,48 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 320,
-    backgroundColor: '#161619',
-    borderRadius: 24,
+    backgroundColor: '#141418',
+    borderRadius: 28,
     borderWidth: 1,
-    borderColor: '#26262C',
-    padding: 24,
+    borderColor: '#2A2A34',
+    paddingVertical: 28,
+    paddingHorizontal: 24,
     alignItems: 'center',
-    elevation: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
+    elevation: 20,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+  },
+  logoBadge: {
+    marginBottom: 20,
+    alignItems: 'center',
   },
   spinnerContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: 'rgba(217, 142, 50, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(217, 142, 50, 0.3)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(217, 142, 50, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   title: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 6,
+    marginBottom: 8,
     textAlign: 'center',
+    letterSpacing: 0.2,
   },
   subtitle: {
-    fontSize: 12,
-    color: '#8E8E98',
+    fontSize: 13,
+    color: '#9E9EA8',
     textAlign: 'center',
-    lineHeight: 17,
+    lineHeight: 18,
+    paddingHorizontal: 8,
   },
 });
 
