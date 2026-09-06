@@ -4,6 +4,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from '@/utils/storage';
 import { User, authService } from '@/services/auth';
 import api from '@/services/api';
 import { triggerPartnerVerifiedNotification } from '@/utils/notifications';
@@ -103,8 +104,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await authService.logout();
-      await AsyncStorage.removeItem('serviz_user_session');
       await api.setToken(null);
+      await storage.removeItem('serviz_auth_token');
+      await storage.removeItem('serviz_user_session');
+      await AsyncStorage.removeItem('serviz_user_session');
+      await AsyncStorage.removeItem('serviz_auth_token');
       setUser(null);
     } finally {
       setIsLoading(false);

@@ -20,7 +20,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter } from 'expo-router';
 import ServizLogo from '@/components/Logo';
 import Button from '@/components/Button';
 import colors from '@/constants/colors';
@@ -47,25 +47,31 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 import CustomAlertModal from '@/components/CustomAlertModal';
 import api from '@/services/api';
 
+const DEFAULT_EMIRATES = [
+  { id: 1, name: 'Dubai' },
+  { id: 3, name: 'Ajman' },
+  { id: 4, name: 'Sharjah' },
+];
+
+const DEFAULT_AREAS = [
+  { id: 1, name: 'Downtown Dubai' },
+  { id: 2, name: 'Dubai Marina' },
+  { id: 3, name: 'Business Bay' },
+];
+
 export default function LandingScreen() {
   const router = useRouter();
-  const { isPartner, refreshUser } = useAuth();
+  const { isPartner } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-
-  useFocusEffect(
-    React.useCallback(() => {
-      refreshUser().catch(() => null);
-    }, [])
-  );
 
   // Catalog API States (ONLY real backend catalog data)
   const [catalogLoading, setCatalogLoading] = useState(true);
-  const [emiratesList, setEmiratesList] = useState<{ id: number; name: string }[]>([]);
-  const [areasList, setAreasList] = useState<{ id: number; name: string }[]>([]);
+  const [emiratesList, setEmiratesList] = useState<{ id: number; name: string }[]>(DEFAULT_EMIRATES);
+  const [areasList, setAreasList] = useState<{ id: number; name: string }[]>(DEFAULT_AREAS);
   const [servicesList, setServicesList] = useState<{ id: number; name: string }[]>([]);
 
-  const [selectedEmirateObj, setSelectedEmirateObj] = useState<{ id: number; name: string } | null>(null);
-  const [selectedAreaObj, setSelectedAreaObj] = useState<{ id: number; name: string } | null>(null);
+  const [selectedEmirateObj, setSelectedEmirateObj] = useState<{ id: number; name: string } | null>(DEFAULT_EMIRATES[0]);
+  const [selectedAreaObj, setSelectedAreaObj] = useState<{ id: number; name: string } | null>(DEFAULT_AREAS[0]);
   const [selectedServiceObj, setSelectedServiceObj] = useState<{ id: number; name: string } | null>(null);
 
   const [activeTab, setActiveTab] = useState<TabType>('home');
@@ -75,12 +81,23 @@ export default function LandingScreen() {
 
   // Fetch real Emirates, Areas & Admin Services from backend catalog before showing main screen
   useEffect(() => {
+    let isMounted = true;
+
+    // Safety timeout: Never stay stuck on splash screen for more than 2 seconds
+    const safetyTimer = setTimeout(() => {
+      if (isMounted && catalogLoading) {
+        setCatalogLoading(false);
+      }
+    }, 2000);
+
     async function loadCatalog() {
       try {
         const [emiratesRes, servicesRes] = await Promise.all([
           api.get<any[]>('/catalog/emirates'),
           api.get<any[]>('/catalog/services'),
         ]);
+
+        if (!isMounted) return;
 
         if (emiratesRes.data && emiratesRes.data.length > 0) {
           setEmiratesList(emiratesRes.data);
@@ -89,7 +106,7 @@ export default function LandingScreen() {
 
           // Fetch cities for first emirate
           const citiesRes = await api.get<any[]>(`/catalog/cities?emirate_id=${firstEmirate.id}`);
-          if (citiesRes.data && citiesRes.data.length > 0) {
+          if (isMounted && citiesRes.data && citiesRes.data.length > 0) {
             setAreasList(citiesRes.data);
             setSelectedAreaObj(citiesRes.data[0]);
           }
@@ -101,10 +118,18 @@ export default function LandingScreen() {
       } catch (err) {
         console.log('Catalog fetch error:', err);
       } finally {
-        setCatalogLoading(false);
+        if (isMounted) {
+          setCatalogLoading(false);
+        }
       }
     }
+
     loadCatalog();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(safetyTimer);
+    };
   }, []);
 
   const handleSelectEmirate = async (emirate: { id: number; name: string }) => {

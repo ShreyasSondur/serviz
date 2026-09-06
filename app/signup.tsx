@@ -175,10 +175,13 @@ export default function SignUpScreen() {
                       { preferEphemeralSession: true }
                     );
                     if (result.type === 'success' && result.url) {
-                      router.push({
-                        pathname: '/',
-                        params: { url: result.url },
-                      });
+                      const match = result.url.match(/[?&]token=([^&]+)/);
+                      if (match && match[1]) {
+                        await api.setToken(match[1]);
+                        await refreshUser();
+                        router.replace('/landing');
+                        return;
+                      }
                     }
                   } catch (err) {
                     Linking.openURL(googleUrl);

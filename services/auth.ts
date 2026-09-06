@@ -103,7 +103,7 @@ export class AuthService {
    * Log out user.
    */
   public async logout(): Promise<void> {
-    api.setToken(null);
+    await api.setToken(null);
   }
 
   /**

@@ -31,6 +31,8 @@ import { ActivityIndicator } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
 
+let hasProcessedInitialUrl = false;
+
 export default function IndexScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ token?: string }>();
@@ -41,7 +43,7 @@ export default function IndexScreen() {
 
   // Auto-redirect if user session is active / restored
   useEffect(() => {
-    if (!isBootstrapping && (isAuthenticated || user || api.getToken())) {
+    if (!isBootstrapping && isAuthenticated && user && !!api.getToken()) {
       router.replace('/landing');
     }
   }, [isBootstrapping, isAuthenticated, user]);
@@ -52,6 +54,7 @@ export default function IndexScreen() {
     const match = rawUrl.match(/[?&]token=([^&]+)/);
     if (match && match[1]) {
       const token = match[1];
+      hasProcessedInitialUrl = true;
       await api.setToken(token);
       await refreshUser();
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history?.replaceState) {
@@ -67,7 +70,13 @@ export default function IndexScreen() {
       processGoogleToken(`?token=${params.token}`);
     }
 
-    Linking.getInitialURL().then(processGoogleToken);
+    if (!hasProcessedInitialUrl) {
+      hasProcessedInitialUrl = true;
+      Linking.getInitialURL().then((url) => {
+        if (url) processGoogleToken(url);
+      });
+    }
+
     const subscription = Linking.addEventListener('url', (e) => processGoogleToken(e.url));
     return () => subscription.remove();
   }, [params.token]);
