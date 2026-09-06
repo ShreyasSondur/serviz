@@ -143,6 +143,14 @@ export default function PhoneScreen() {
                 onPress={handleContinue}
                 style={styles.continueBtn}
               />
+
+              <TouchableOpacity
+                style={styles.skipBtn}
+                onPress={() => router.replace('/landing')}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.skipText}>Skip for now →</Text>
+              </TouchableOpacity>
             </Card>
           </View>
 
@@ -276,6 +284,16 @@ const styles = StyleSheet.create({
   },
   continueBtn: {
     marginTop: 4,
+  },
+  skipBtn: {
+    marginTop: 14,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  skipText: {
+    color: '#8E8E98',
+    fontSize: 13,
+    fontWeight: '500',
   },
   bottomSpacer: {
     height: 20,

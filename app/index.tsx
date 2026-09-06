@@ -24,9 +24,10 @@ import GoogleIcon from '@/components/GoogleIcon';
 import colors from '@/constants/colors';
 import useAuth from '@/hooks/useAuth';
 import api from '@/services/api';
-
+import { authService } from '@/services/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { syncPushTokenWithBackend } from '@/utils/notifications';
 import LoadingModal from '@/components/LoadingModal';
-
 import { ActivityIndicator } from 'react-native';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -40,8 +41,8 @@ export function resetLandingRedirect() {
 
 export default function IndexScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ token?: string }>();
-  const { user, isAuthenticated, isBootstrapping, login, refreshUser, isLoading } = useAuth();
+  const params = useLocalSearchParams<{ token?: string; is_new?: string }>();
+  const { user, setUser, isAuthenticated, isBootstrapping, login, refreshUser, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +72,12 @@ export default function IndexScreen() {
     const match = rawUrl.match(/[?&]token=([^&]+)/);
     if (match && match[1]) {
       const token = match[1];
+      const isNewMatch = rawUrl.match(/[?&]is_new=([^&]+)/);
+      const isNew = isNewMatch ? (isNewMatch[1] === 'true' || isNewMatch[1] === '1') : false;
+
       hasProcessedInitialUrl = true;
+      hasRedirectedToLanding = true; // Mark true so auto-redirect useEffect doesn't preemptively push to /landing
+
       setLoadingText({
         title: 'Authenticating...',
         subtitle: 'Finalizing your secure session with Serviz...',
@@ -80,11 +86,27 @@ export default function IndexScreen() {
 
       try {
         await api.setToken(token);
-        await refreshUser();
+        const profileRes = await authService.getProfile();
+        let userProfile = profileRes.data;
+        if (userProfile) {
+          setUser(userProfile);
+          await AsyncStorage.setItem('serviz_user_session', JSON.stringify(userProfile));
+        } else {
+          await refreshUser();
+        }
+        syncPushTokenWithBackend().catch(() => null);
+
         if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history?.replaceState) {
           window.history.replaceState({}, document.title, window.location.pathname);
         }
-        router.replace('/landing');
+
+        setGoogleLoading(false);
+        const needsPhone = isNew || !userProfile?.phone_number;
+        if (needsPhone) {
+          router.replace('/phone');
+        } else {
+          router.replace('/landing');
+        }
       } catch (err) {
         console.log('Error processing Google token:', err);
         setGoogleLoading(false);
@@ -96,7 +118,8 @@ export default function IndexScreen() {
   // Detect token parameter in URL from Google OAuth Callback
   useEffect(() => {
     if (params.token) {
-      processGoogleToken(`?token=${params.token}`);
+      const isNewQuery = params.is_new ? `&is_new=${params.is_new}` : '';
+      processGoogleToken(`?token=${params.token}${isNewQuery}`);
     }
 
     if (!hasProcessedInitialUrl) {
@@ -108,7 +131,7 @@ export default function IndexScreen() {
 
     const subscription = Linking.addEventListener('url', (e) => processGoogleToken(e.url));
     return () => subscription.remove();
-  }, [params.token]);
+  }, [params.token, params.is_new]);
 
   const handleGoogleLogin = async () => {
     setError(null);
@@ -174,7 +197,7 @@ export default function IndexScreen() {
     return (
       <View style={styles.bootSplashContainer}>
         <ServizLogo size="lg" />
-        <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 28 }} />
+        <ActivityIndicator size="small" color="#D4933A" style={{ marginTop: 24 }} />
       </View>
     );
   }

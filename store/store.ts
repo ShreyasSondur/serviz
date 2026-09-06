@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import storage from '@/utils/storage';
 import { User, authService } from '@/services/auth';
 import api from '@/services/api';
-import { triggerPartnerVerifiedNotification } from '@/utils/notifications';
+import { syncPushTokenWithBackend } from '@/utils/notifications';
 
 interface AppState {
   user: User | null;
@@ -71,16 +71,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setUser(res.data);
           await AsyncStorage.setItem('serviz_user_session', JSON.stringify(res.data));
 
-          // Check if partner profile was approved by Admin and trigger push notification once
-          const p = res.data.partnerProfile;
-          if (p && (p.is_verified === true || p.status === 'VERIFIED')) {
-            const notifiedKey = `partner_approved_notified_${res.data.id}_${p.id || 'default'}`;
-            const alreadyNotified = await AsyncStorage.getItem(notifiedKey);
-            if (!alreadyNotified) {
-              await triggerPartnerVerifiedNotification();
-              await AsyncStorage.setItem(notifiedKey, 'true');
-            }
-          }
+          // Sync push token with backend whenever user profile is authenticated
+          syncPushTokenWithBackend().catch(() => null);
         } else if (res.status === 401) {
           // Token is invalid/expired
           setUser(null);
@@ -123,6 +115,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       await storage.removeItem('serviz_user_session');
       await AsyncStorage.removeItem('serviz_user_session');
       await AsyncStorage.removeItem('serviz_auth_token');
+      await AsyncStorage.removeItem('serviz_synced_push_token');
       setUser(null);
     } finally {
       setIsLoading(false);

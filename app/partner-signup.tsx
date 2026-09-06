@@ -36,6 +36,7 @@ import { takePhotoWithCamera, pickImageFromLibrary } from '@/utils/imagePicker';
 import ApplicationReceivedModal from '@/components/ApplicationReceivedModal';
 import ImageSourceModal from '@/components/ImageSourceModal';
 import LoadingModal from '@/components/LoadingModal';
+import { getExpoPushTokenAsync, syncPushTokenWithBackend } from '@/utils/notifications';
 
 export default function PartnerSignupScreen() {
   const router = useRouter();
@@ -155,6 +156,11 @@ export default function PartnerSignupScreen() {
 
     setIsSubmitting(true);
     try {
+      let pushToken: string | null = null;
+      try {
+        pushToken = await getExpoPushTokenAsync();
+      } catch (_) {}
+
       const res = await api.post('/partner/apply', {
         first_name: firstName.trim(),
         last_name: lastName.trim(),
@@ -164,7 +170,12 @@ export default function PartnerSignupScreen() {
         emirate_id_number: emirateIdNumber || '784-1990-1234567-1',
         business_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
         emirates_id_url: uploadedDocument || mockSampleDocument,
+        push_token: pushToken || undefined,
       });
+
+      if (pushToken) {
+        syncPushTokenWithBackend().catch(() => null);
+      }
 
       setIsSubmitting(false);
       if (res.error) {

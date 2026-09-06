@@ -3,7 +3,7 @@
  * Prepared for clean integration with FastAPI backend.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import * as Linking from 'expo-linking';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import ServizLogo from '@/components/Logo';
 import * as WebBrowser from 'expo-web-browser';
 import Input from '@/components/Input';
@@ -25,11 +25,14 @@ import colors from '@/constants/colors';
 import useAuth from '@/hooks/useAuth';
 import authService from '@/services/auth';
 import api from '@/services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { syncPushTokenWithBackend } from '@/utils/notifications';
 
 import LoadingModal from '@/components/LoadingModal';
 
 export default function SignUpScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ token?: string; is_new?: string }>();
   const { setUser, login, refreshUser } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -41,6 +44,43 @@ export default function SignUpScreen() {
     title: 'Creating Account...',
     subtitle: 'Setting up your Serviz account...',
   });
+
+  useEffect(() => {
+    if (params.token) {
+      const processToken = async () => {
+        setLoadingText({
+          title: 'Authenticating...',
+          subtitle: 'Finalizing your secure session with Serviz...',
+        });
+        setLoading(true);
+        try {
+          await api.setToken(params.token!);
+          const profileRes = await authService.getProfile();
+          let userProfile = profileRes.data;
+          if (userProfile) {
+            setUser(userProfile);
+            await AsyncStorage.setItem('serviz_user_session', JSON.stringify(userProfile));
+          } else {
+            await refreshUser();
+          }
+          syncPushTokenWithBackend().catch(() => null);
+          setLoading(false);
+
+          const isNew = params.is_new ? (params.is_new === 'true' || params.is_new === '1') : true;
+          const needsPhone = isNew || !userProfile?.phone_number;
+          if (needsPhone) {
+            router.replace('/phone');
+          } else {
+            router.replace('/landing');
+          }
+        } catch (_) {
+          setLoading(false);
+          setError('Failed to complete Google sign-in. Please try again.');
+        }
+      };
+      processToken();
+    }
+  }, [params.token, params.is_new]);
 
   const handleSignUp = async () => {
     setError(null);
@@ -121,13 +161,31 @@ export default function SignUpScreen() {
       if (result.type === 'success' && result.url) {
         const match = result.url.match(/[?&]token=([^&]+)/);
         if (match && match[1]) {
+          const isNewMatch = result.url.match(/[?&]is_new=([^&]+)/);
+          const isNew = isNewMatch ? (isNewMatch[1] === 'true' || isNewMatch[1] === '1') : true;
+
           setLoadingText({
             title: 'Authenticating...',
             subtitle: 'Finalizing your secure session with Serviz...',
           });
           await api.setToken(match[1]);
-          await refreshUser();
-          router.replace('/landing');
+          const profileRes = await authService.getProfile();
+          let userProfile = profileRes.data;
+          if (userProfile) {
+            setUser(userProfile);
+            await AsyncStorage.setItem('serviz_user_session', JSON.stringify(userProfile));
+          } else {
+            await refreshUser();
+          }
+          syncPushTokenWithBackend().catch(() => null);
+
+          setLoading(false);
+          const needsPhone = isNew || !userProfile?.phone_number;
+          if (needsPhone) {
+            router.replace('/phone');
+          } else {
+            router.replace('/landing');
+          }
           return;
         }
       }

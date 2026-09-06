@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import colors from '@/constants/colors';
 import ServizLogo from '@/components/Logo';
@@ -33,12 +34,12 @@ export const LoadingModal: React.FC<LoadingModalProps> = ({
             <ServizLogo size="sm" />
           </View>
 
-          <View style={styles.spinnerContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+          <View style={styles.spinnerWrapper}>
+            <ActivityIndicator size="small" color="#D4933A" />
           </View>
 
           <Text style={styles.title}>{title}</Text>
-          <Text style={styles.subtitle}>{subtitle}</Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
       </View>
     </Modal>
@@ -48,56 +49,66 @@ export const LoadingModal: React.FC<LoadingModalProps> = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(10, 10, 14, 0.85)',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
   },
   card: {
     width: '100%',
-    maxWidth: 320,
-    backgroundColor: '#141418',
-    borderRadius: 28,
+    maxWidth: 290,
+    backgroundColor: '#161619',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#2A2A34',
-    paddingVertical: 28,
-    paddingHorizontal: 24,
+    borderColor: '#26262D',
+    paddingVertical: 24,
+    paddingHorizontal: 22,
     alignItems: 'center',
-    elevation: 20,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.35,
+        shadowRadius: 20,
+      },
+      android: {
+        elevation: 10,
+      },
+      web: {
+        boxShadow: '0px 12px 32px rgba(0, 0, 0, 0.45)',
+      } as any,
+    }),
   },
   logoBadge: {
-    marginBottom: 20,
+    marginBottom: 16,
     alignItems: 'center',
+    opacity: 0.95,
   },
-  spinnerContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(217, 142, 50, 0.12)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(217, 142, 50, 0.35)',
+  spinnerWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#1E1E24',
+    borderWidth: 1,
+    borderColor: '#2D2D36',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 18,
+    marginBottom: 14,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginBottom: 8,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#F4F4F6',
+    marginBottom: 6,
     textAlign: 'center',
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   },
   subtitle: {
-    fontSize: 13,
-    color: '#9E9EA8',
+    fontSize: 12,
+    color: '#8A8A96',
     textAlign: 'center',
-    lineHeight: 18,
-    paddingHorizontal: 8,
+    lineHeight: 17,
+    paddingHorizontal: 6,
   },
 });
 
