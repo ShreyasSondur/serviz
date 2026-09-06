@@ -54,6 +54,9 @@ export default function IndexScreen() {
       const token = match[1];
       await api.setToken(token);
       await refreshUser();
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.history?.replaceState) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
       router.replace('/landing');
     }
   };
@@ -61,10 +64,7 @@ export default function IndexScreen() {
   // Detect token parameter in URL from Google OAuth Callback
   useEffect(() => {
     if (params.token) {
-      api.setToken(params.token);
-      refreshUser().then(() => {
-        router.replace('/landing');
-      });
+      processGoogleToken(`?token=${params.token}`);
     }
 
     Linking.getInitialURL().then(processGoogleToken);
