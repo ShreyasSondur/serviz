@@ -70,6 +70,7 @@ export async function triggerPartnerVerifiedNotification() {
         body: 'Your partner application has been verified by Serviz Administration. You now have full access to publish service listings and exclusive deals.',
         data: { type: 'partner_verified' },
         sound: 'default',
+        color: '#D4933A',
       },
       trigger: null,
     });

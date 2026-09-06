@@ -28,6 +28,10 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "notification": {
+      "icon": "./assets/images/notification-icon.png",
+      "color": "#D4933A"
+    },
     "plugins": [
       "expo-router",
       [
@@ -37,6 +41,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#D4933A"
         }
       ]
     ],
