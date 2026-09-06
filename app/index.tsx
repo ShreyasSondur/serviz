@@ -13,8 +13,8 @@ import {
   Platform,
   ScrollView,
   SafeAreaView,
-  Linking,
 } from 'react-native';
+import * as Linking from 'expo-linking';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import ServizLogo from '@/components/Logo';
 import * as WebBrowser from 'expo-web-browser';
@@ -73,7 +73,9 @@ export default function IndexScreen() {
   }, [params.token]);
 
   const handleGoogleLogin = async () => {
-    const googleUrl = `${api.getBaseUrl()}/auth/google/login`;
+    const redirectUrl = Linking.createURL('/');
+    const googleUrl = `${api.getBaseUrl()}/auth/google/login?redirect_url=${encodeURIComponent(redirectUrl)}&prompt=select_account`;
+
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.location.href = googleUrl;
       return;
@@ -82,7 +84,8 @@ export default function IndexScreen() {
     try {
       const result = await WebBrowser.openAuthSessionAsync(
         googleUrl,
-        'https://servizuae.com/login'
+        redirectUrl,
+        { preferEphemeralSession: true }
       );
       if (result.type === 'success' && result.url) {
         await processGoogleToken(result.url);

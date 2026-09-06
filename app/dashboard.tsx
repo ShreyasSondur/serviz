@@ -46,7 +46,6 @@ import {
 } from '@/components/LandingIcons';
 import api from '@/services/api';
 import useAuth from '@/hooks/useAuth';
-import { triggerPartnerVerifiedNotification } from '@/utils/notifications';
 
 export interface ServiceItem {
   id: string;
@@ -79,8 +78,6 @@ export function DashboardContent() {
   const { isPartner } = useAuth();
   const [isVerified, setIsVerified] = useState<boolean>(false);
   const [partnerStatus, setPartnerStatus] = useState<'PENDING' | 'VERIFIED' | null>(null);
-  const [isVerifiedNoticeVisible, setIsVerifiedNoticeVisible] = useState(false);
-  const [hasShownVerifiedNotice, setHasShownVerifiedNotice] = useState(false);
 
   // State for services, deals & partner profile stats
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -182,12 +179,6 @@ export function DashboardContent() {
         if (profileRes.data.status) setPartnerStatus(profileRes.data.status);
         if (profileRes.data.services_limit) setServicesLimit(profileRes.data.services_limit);
         if (profileRes.data.deals_limit) setDealsLimit(profileRes.data.deals_limit);
-
-        if (verified && !hasShownVerifiedNotice) {
-          setIsVerifiedNoticeVisible(true);
-          setHasShownVerifiedNotice(true);
-          triggerPartnerVerifiedNotification();
-        }
       }
 
       if (servicesRes.data) {
