@@ -19,8 +19,9 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import ServizLogo from '@/components/Logo';
 import Button from '@/components/Button';
 import colors from '@/constants/colors';
@@ -73,10 +74,32 @@ export default function LandingScreen() {
   const [selectedAreaObj, setSelectedAreaObj] = useState<{ id: number; name: string } | null>(DEFAULT_AREAS[0]);
   const [selectedServiceObj, setSelectedServiceObj] = useState<{ id: number; name: string } | null>(null);
 
-  const [activeTab, setActiveTab] = useState<TabType>('home');
+  const params = useLocalSearchParams<{ tab?: TabType }>();
+  const [activeTab, setActiveTab] = useState<TabType>(params.tab || 'home');
   const [landingModal, setLandingModal] = useState<'emirate' | 'area' | 'service' | null>(null);
   const [serviceSearchFilter, setServiceSearchFilter] = useState('');
   const [alreadyPartnerModal, setAlreadyPartnerModal] = useState(false);
+
+  // Sync tab if passed via route parameter
+  useEffect(() => {
+    if (params.tab && ['home', 'services', 'deals', 'profile', 'dashboard'].includes(params.tab)) {
+      setActiveTab(params.tab);
+    }
+  }, [params.tab]);
+
+  // Handle hardware back press on Android: return to 'home' tab instead of exiting or popping
+  useEffect(() => {
+    const onBackPress = () => {
+      if (activeTab !== 'home') {
+        setActiveTab('home');
+        return true;
+      }
+      return false;
+    };
+
+    const backSubscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backSubscription.remove();
+  }, [activeTab]);
 
   // Fetch real Emirates, Areas & Admin Services from backend catalog in background
   useEffect(() => {

@@ -32,6 +32,11 @@ import { ActivityIndicator } from 'react-native';
 WebBrowser.maybeCompleteAuthSession();
 
 let hasProcessedInitialUrl = false;
+let hasRedirectedToLanding = false;
+
+export function resetLandingRedirect() {
+  hasRedirectedToLanding = false;
+}
 
 export default function IndexScreen() {
   const router = useRouter();
@@ -41,17 +46,15 @@ export default function IndexScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const hasRedirectedRef = React.useRef(false);
-
-  // Auto-redirect once if user session is active / restored on initial bootstrap
+  // Auto-redirect strictly once per session upon bootstrap
   useEffect(() => {
     if (!isAuthenticated) {
-      hasRedirectedRef.current = false;
+      hasRedirectedToLanding = false;
       return;
     }
 
-    if (!isBootstrapping && isAuthenticated && user && !!api.getToken() && !hasRedirectedRef.current) {
-      hasRedirectedRef.current = true;
+    if (!isBootstrapping && isAuthenticated && user && !!api.getToken() && !hasRedirectedToLanding) {
+      hasRedirectedToLanding = true;
       router.replace('/landing');
     }
   }, [isBootstrapping, isAuthenticated, user]);

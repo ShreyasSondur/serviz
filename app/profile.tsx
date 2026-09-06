@@ -16,6 +16,7 @@ import {
   TextInput,
   Platform,
   ActivityIndicator,
+  BackHandler,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import ServizLogo from '@/components/Logo';
@@ -271,6 +272,15 @@ export function ProfileContent() {
 
 export default function ProfileScreen({ onTabChange }: { onTabChange?: (tab: TabType) => void }) {
   const router = useRouter();
+
+  useEffect(() => {
+    const onBackPress = () => {
+      router.replace('/landing');
+      return true;
+    };
+    const backSub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => backSub.remove();
+  }, [router]);
 
   const handleTabSelect = (tab: TabType) => {
     if (onTabChange) {

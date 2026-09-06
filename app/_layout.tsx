@@ -32,6 +32,7 @@ export default function RootLayout() {
           name="index"
           options={{
             title: 'Home',
+            gestureEnabled: false,
           }}
         />
         <Stack.Screen
@@ -56,6 +57,7 @@ export default function RootLayout() {
           name="landing"
           options={{
             title: 'Serviz Landing',
+            gestureEnabled: false,
           }}
         />
         <Stack.Screen
